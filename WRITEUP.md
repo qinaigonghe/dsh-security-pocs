@@ -147,4 +147,4 @@ Using CVSS 3.1 with a local attack surface (AV:L/AC:L/PR:N/UI:N):
 
 - Anchor: deepseek-harness `0.1.0-rc.5` @ `47f943859b`; PoCs require a source checkout with `pnpm install` and a sibling (or `REPO`-pointed) layout — see [README.md](README.md).
 - All four scripts are deterministic and need no API key; they start and stop their own `dsh web` and mock-LLM processes, and print the captured evidence frames.
-- Runtime evidence captures (mux JSONL, RPC responses) are gitignored; `evidence/capture-mux.mjs` (committed) is the only helper the scripts need.
+- Runtime evidence captures (mux JSONL, RPC responses) are gitignored; `capture-mux.mjs` (committed) is the only helper the scripts need.

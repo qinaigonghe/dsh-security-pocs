@@ -49,6 +49,7 @@ info(){ printf '    %s\n' "$*"; }
 
 cleanup() {
   lsof -tiTCP:"$WEB_PORT" -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null || true
+  lsof -tiTCP:"$MOCK_PORT" -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null || true
   [ -n "${MOCK_PID:-}" ] && kill "$MOCK_PID" 2>/dev/null || true
   [ -n "${CAP_PID:-}" ] && kill "$CAP_PID" 2>/dev/null || true
 }
@@ -121,7 +122,7 @@ echo "  -> 与受害者 cwd 相同: $REPO"
 echo "  -> 受害者会话 ID 未被使用; 仅靠 cwd 字符串授权"
 
 # 攻击者 mux 捕获(全局广播, 无需任何会话)
-node "$E/capture-mux.mjs" "$CAP" > /tmp/cap-07.out 2>&1 &
+node "$SELF/capture-mux.mjs" "$CAP" > /tmp/cap-07.out 2>&1 &
 CAP_PID=$!
 sleep 1.5
 

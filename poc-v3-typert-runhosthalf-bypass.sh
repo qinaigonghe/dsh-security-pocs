@@ -50,6 +50,7 @@ info(){ printf '    %s\n' "$*"; }
 kill_web() { lsof -tiTCP:"$WEB_PORT" -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null || true; }
 cleanup() {
   kill_web
+  lsof -tiTCP:"$MOCK_PORT" -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null || true
   [ -n "${MOCK_PID:-}" ] && kill "$MOCK_PID" 2>/dev/null || true
 }
 trap cleanup EXIT

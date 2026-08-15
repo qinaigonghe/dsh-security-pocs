@@ -29,6 +29,8 @@ MOCK_LOG="/tmp/mock-${VARIANT}.log"
 WEB_LOG="/tmp/dsh-mock-${VARIANT}.log"
 uuid() { node -e 'console.log(crypto.randomUUID())'; }
 cleanup() {
+  lsof -tiTCP:"$WEB_PORT" -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null || true
+  lsof -tiTCP:"$MOCK_PORT" -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null || true
   [ -n "${WEB_PID:-}" ] && kill "$WEB_PID" 2>/dev/null || true
   [ -n "${MOCK_PID:-}" ] && kill "$MOCK_PID" 2>/dev/null || true
   [ -n "${CAP_PID:-}" ] && kill "$CAP_PID" 2>/dev/null || true
@@ -59,7 +61,7 @@ WEB_PID=$!
 for i in $(seq 1 60); do curl -s -m 1 -o /dev/null -X POST "http://127.0.0.1:$WEB_PORT/api/host.describe" -H 'content-type: application/json' -d '{"type":"client-request","rpcId":"warm","method":"host.describe","payload":{}}' && break; sleep 1; done
 
 # 3) attacker mux capture
-node "$E/capture-mux.mjs" "$CAP" > /tmp/cap-05-${VARIANT}.out 2>&1 &
+node "$SELF/capture-mux.mjs" "$CAP" > /tmp/cap-05-${VARIANT}.out 2>&1 &
 CAP_PID=$!
 sleep 1.5
 

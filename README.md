@@ -67,7 +67,7 @@ If the checkout lives elsewhere:
 REPO=/path/to/deepseek-harness bash /path/to/dsh-security-pocs/poc-v3-typert-runhosthalf-bypass.sh
 ```
 
-Each script starts and stops its own `dsh web` and mock-LLM processes, prints the captured evidence, and exits `0` only when the exploit is confirmed. Captured frames land in `evidence/` (runtime artifacts are gitignored; only `evidence/capture-mux.mjs` is committed).
+Each script starts and stops its own `dsh web` and mock-LLM processes, prints the captured evidence, and exits `0` only when the exploit is confirmed. Captured frames land in `evidence/` (runtime artifacts are gitignored); the mux-capture helper `capture-mux.mjs` lives at the repo root.
 
 ## Expected output
 
