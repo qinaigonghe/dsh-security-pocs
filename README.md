@@ -38,7 +38,7 @@ attacker: POST /api dynamicCordisRunner/invoke {"method":"pwn"}
 ## Requirements
 
 - macOS or Linux
-- Node ^22.19 || >=24, pnpm
+- Node ^22.19 || >=24, pnpm, ripgrep (`rg`), `curl`, `lsof`
 - A source checkout of deepseek-harness with `pnpm install` completed, placed as a **sibling directory** named `deepseek-harness` (or pointed to via `REPO`)
 
 ```sh

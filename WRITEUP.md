@@ -98,7 +98,7 @@ DeepSeek Harness is an "everything is a plugin" agent harness:
 ### Mechanism — the default-mounted Remote surface
 
 1. **Typert Gateway intercepts `/api` Remote endpoints** (`packages/api/gateway/src/index.ts:110-118`): `connection.rpc.intercept('/api', …, { authority: 'trusted-host' })`. `isTrustedApiRequest` only requires `Host` to be loopback or in `trustedHosts` — **no Origin is required** (`packages/client/connection/src/api-request-trust.ts:96-118`).
-2. **The default web profile mounts** `cordis-host-runner`, `api-remotes`, `typert-gateway`, and `plugin-inventory` (`packages/bundle/web-app/cordis.patch.yml:102-172,205-206`). With no configuration change:
+2. **The default web profile mounts** the Remote surface: `plugin-inventory` (`packages/bundle/web-app/cordis.patch.yml:94-95`), the API gateway (`:99-100`), `cordis-host-runner` (`:102-103`), and `api-remotes` (`:165-166`); the Typert gateway itself is `@deepseek-ai/dsh-api-gateway` from the base bundle (`packages/bundle/base/cordis.patch.yml:36-37`). With no configuration change:
    - `pluginInventory/list` → the Loader's full plugin inventory (module names, states);
    - `dynamicCordisRunner/inventory` → the dynamic-plugin registry, including `pluginId` / `activeRun.pluginRunId`;
    - `host.listDirectory` → directory listing once a browse capability is composed (the PoC demonstrates the headless browse overlay).
@@ -106,7 +106,7 @@ DeepSeek Harness is an "everything is a plugin" agent harness:
 
 ### Mechanism — the `runHostHalf` approval bypass
 
-1. `runHostHalf` (`cordis-host-runner/src/index.ts:324-377`): the `requestId: null` branch is designed as the "human clicked run in the UI" gesture. It performs **no approval and no holder check** — it only checks `plugin.sessionId === agent.session.id`, where `agent` is resolved from a **caller-supplied `sessionId` string** (`packages/api/remotes/src/agent-lookup.ts`). The wire key is `agentId` (Typert-generated `packages/extensions/cordis-host-runner/lib/typert.host.js`).
+1. `runHostHalf` (`cordis-host-runner/src/index.ts:324-377`): the `requestId: null` branch is designed as the "human clicked run in the UI" gesture. It performs **no approval and no holder check** — the only ownership check is `plugin?.sessionId === agent.id` in `owned()` (where `Agent.id` is the `SessionId`; `packages/core/agent/src/runtime-types.ts:66`), and `agent` is resolved from a **caller-supplied `sessionId` string** (`packages/api/remotes/src/agent-lookup.ts`). The wire key is `agentId` (Typert-generated `packages/extensions/cordis-host-runner/lib/typert.host.js`).
 2. `invoke(pluginId, pluginRunId, method, args)` (`index.ts:740-762`): no agent / ownership validation — if a plugin is running and the run ID matches, it calls `run.handlers.get(method)(args)` directly. Any running plugin's host handler is executable.
 3. `cordis/request-run` events are forwarded to every `events.mux` subscriber (`packages/api/remotes/src/remote-events.ts` allowlist; `api-proxy.ts:3616-3628`), leaking pending activation `requestId / agentId / pluginId / packageId / mode`.
 4. The host half is not a sandbox (`cordis-host-runner/src/sandbox.ts:1-10`): `ctx.bash` / `ctx.fs` / `ctx.web` and `harness.defineTool` / `registerTool` reach the real runtime; `harness.handle(method, fn)` registers the exact handler `invoke` executes.

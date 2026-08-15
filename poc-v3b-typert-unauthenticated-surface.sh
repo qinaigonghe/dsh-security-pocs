@@ -66,13 +66,21 @@ sleep 2
 say RPC1 "pluginInventory/list — Loader 插件清单(无鉴权)"
 R1=$(rpc "pluginInventory/list" '{"args":{}}')
 echo "$R1" > "$OUT/01-pluginInventory-list.json"
-ok "entries=$(echo "$R1" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);console.log(j.result.value.entries.length)}catch{console.log("ERR")}})')"
+R1_ENTRIES=$(echo "$R1" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).result.value.entries.length)}catch{console.log("ERR")}})')
+ok "entries=$R1_ENTRIES"
+if ! [[ "$R1_ENTRIES" =~ ^[0-9]+$ ]] || [ "$R1_ENTRIES" -eq 0 ]; then
+  echo "FAIL: pluginInventory/list unreachable or empty (see $WEB_LOG $OUT/01-pluginInventory-list.json)"; exit 1
+fi
 echo "$R1" | head -c 400; echo
 
 say RPC2 "dynamicCordisRunner/inventory — 动态插件注册表(无鉴权, 含 activeRun/pluginId)"
 R2=$(rpc "dynamicCordisRunner/inventory" '{"args":{}}')
 echo "$R2" > "$OUT/02-dynamicCordisRunner-inventory.json"
-ok "endpoint reachable, result.ok=$(echo "$R2" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).result.ok)}catch{console.log("ERR")}})')"
+R2_OK=$(echo "$R2" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).result.ok)}catch{console.log("ERR")}})')
+ok "endpoint reachable, result.ok=$R2_OK"
+if [ "$R2_OK" != "true" ]; then
+  echo "FAIL: dynamicCordisRunner/inventory unreachable (see $WEB_LOG $OUT/02-dynamicCordisRunner-inventory.json)"; exit 1
+fi
 echo "$R2" | head -c 300; echo
 
 say RPC3 "host.listDirectory(/) — 当前解析为 native, 不可用(记录默认形态)"
@@ -105,7 +113,8 @@ if echo "$R4" | rg -q '"ok":true'; then
   ok "browse 能力下 host.listDirectory 无鉴权返回目录列表:"
   echo "$R4" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s);const rows=j.result.value.entries||[];console.log("  entries:",rows.length,"| first:",JSON.stringify(rows[0]??null))})'
 else
-  echo "  (unexpected) $R4" | head -c 300
+  echo "FAIL: host.listDirectory denied under browse capability (see $WEB_LOG $OUT/04-host-listDirectory-browse.json)"
+  echo "$R4" | head -c 300; echo; exit 1
 fi
 
 echo

@@ -46,6 +46,7 @@ uuid() { node -e 'console.log(crypto.randomUUID())'; }
 say() { printf '\n\033[1;36m◆ %s\033[0m %s\n' "$1" "$2"; }
 ok()  { printf '\033[1;32m  ✔ %s\033[0m\n' "$*"; }
 info(){ printf '    %s\n' "$*"; }
+warn(){ printf '\033[1;33m  ! %s\033[0m\n' "$*"; }
 
 cleanup() {
   lsof -tiTCP:"$WEB_PORT" -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null || true
