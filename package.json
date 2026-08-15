@@ -1,0 +1,14 @@
+{
+  "name": "dsh-security-pocs",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Proof-of-concept exploits for three security findings (plus a supporting surface probe) in DeepSeek Harness 0.1.0-rc.5. All PoCs run the real dsh web server; the model turn is scripted by the repo's own llm-mock-server so no API key is needed.",
+  "scripts": {
+    "poc:v1": "bash poc-v1-cross-session-approval-hijack.sh",
+    "poc:v1:question": "VARIANT=question bash poc-v1-cross-session-approval-hijack.sh",
+    "poc:v2": "bash poc-v2-forged-cwd-cross-session-read.sh",
+    "poc:v3": "bash poc-v3-typert-runhosthalf-bypass.sh",
+    "poc:v3b": "bash poc-v3b-typert-unauthenticated-surface.sh"
+  }
+}
