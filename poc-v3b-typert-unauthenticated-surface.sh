@@ -43,7 +43,7 @@ rpc() { # rpc <method> <payload-json>
 say() { printf '\n\033[1;36m◆ %s\033[0m %s\n' "$1" "$2"; }
 ok()  { printf '\033[1;32m  ✔ %s\033[0m\n' "$*"; }
 
-kill_web() { lsof -tiTCP:"$WEB_PORT" -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null || true; }
+kill_web() { [ -n "${WEB_PID:-}" ] && kill "$WEB_PID" 2>/dev/null || true; }
 cleanup() { kill_web; }
 trap cleanup EXIT
 
@@ -53,7 +53,7 @@ echo "  target: deepseek-harness rc.5 @ 47f943859b   ts=$TS"
 echo "======================================================================"
 
 say SETUP "dsh web (默认 profile, loopback)"
-(cd "$REPO" && node --import tsx/esm apps/cli/src/bin.ts web --port "$WEB_PORT") >"$WEB_LOG" 2>&1 &
+(cd "$REPO" && exec node --import tsx/esm apps/cli/src/bin.ts web --port "$WEB_PORT") >"$WEB_LOG" 2>&1 &
 WEB_PID=$!
 for i in $(seq 1 60); do
   curl -s -m 1 -o /dev/null -X POST "http://127.0.0.1:$WEB_PORT/api/host.describe" \
@@ -98,7 +98,7 @@ cat > "$BROWSE_OVERLAY" <<'YML'
 YML
 kill_web
 sleep 1
-(cd "$REPO" && node --import tsx/esm apps/cli/src/bin.ts web --patch "$BROWSE_OVERLAY" --port "$WEB_PORT") >>"$WEB_LOG" 2>&1 &
+(cd "$REPO" && exec node --import tsx/esm apps/cli/src/bin.ts web --patch "$BROWSE_OVERLAY" --port "$WEB_PORT") >>"$WEB_LOG" 2>&1 &
 WEB_PID=$!
 for i in $(seq 1 60); do
   curl -s -m 1 -o /dev/null -X POST "http://127.0.0.1:$WEB_PORT/api/host.describe" \

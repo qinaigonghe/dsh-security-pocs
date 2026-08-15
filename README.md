@@ -1,6 +1,6 @@
 # dsh-security-pocs
 
-Proof-of-concept exploits for three security findings in **DeepSeek Harness** ([deepseek-harness](https://github.com/deepseek-harness/deepseek-harness), version 0.1.0-rc.5, pre-release, commit `47f943859b`), independently discovered and verified against the real product.
+Proof-of-concept exploits for three security findings in **DeepSeek Harness** ([deepseek-harness](https://github.com/deepseek-ai/deepseek-harness), version 0.1.0-rc.5, pre-release, commit `47f943859b`), independently discovered and verified against the real product.
 
 Every PoC drives the real `dsh web` server — the vendored Loader, the API proxy, the `session_query` tool seam, and the `cordis-host-runner` / Typert gateway — from a clean attacker position: a separate local process with **no session credentials, no tokens, no UI**. The only scripted component is the model turn: the repo's own `llm-mock-server` deterministically emits the tool call the model is steered into by prompt injection, so every reproduction is deterministic and needs **no API key**.
 
@@ -39,11 +39,11 @@ attacker: POST /api dynamicCordisRunner/invoke {"method":"pwn"}
 
 - macOS or Linux
 - Node ^22.19 || >=24, pnpm, ripgrep (`rg`), `curl`, `lsof`
-- A source checkout of deepseek-harness with `pnpm install` completed, placed as a **sibling directory** named `deepseek-harness` (or pointed to via `REPO`)
+- A source checkout of deepseek-harness with `pnpm install` and `pnpm run build` completed, placed as a **sibling directory** named `deepseek-harness` (or pointed to via `REPO`)
 
 ```sh
-git clone https://github.com/deepseek-harness/deepseek-harness.git
-cd deepseek-harness && pnpm install
+git clone https://github.com/deepseek-ai/deepseek-harness.git
+cd deepseek-harness && pnpm install && pnpm run build
 ```
 
 Ports `3080` (web) and `8000` (mock LLM) must be free. No API key is required — the model turn is scripted by `packages/test-support/llm-mock-server`.

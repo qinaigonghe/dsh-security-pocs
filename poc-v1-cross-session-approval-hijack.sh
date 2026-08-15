@@ -21,7 +21,7 @@ MOCK_PORT=${MOCK_PORT:-8000}
 WEB_PORT=${WEB_PORT:-3080}
 VARIANT=${VARIANT:-bash}
 TS=$(date +%Y%m%d-%H%M%S)
-PROBE="$HOME/Documents/dsh-mock-${VARIANT}-${TS}.txt"
+PROBE="${TMPDIR:-/tmp}/dsh-mock-${VARIANT}-${TS}.txt"
 E="$SELF/evidence"
 mkdir -p "$E"
 CAP="$E/05-${VARIANT}-${TS}-mux.jsonl"
@@ -29,8 +29,6 @@ MOCK_LOG="/tmp/mock-${VARIANT}.log"
 WEB_LOG="/tmp/dsh-mock-${VARIANT}.log"
 uuid() { node -e 'console.log(crypto.randomUUID())'; }
 cleanup() {
-  lsof -tiTCP:"$WEB_PORT" -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null || true
-  lsof -tiTCP:"$MOCK_PORT" -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null || true
   [ -n "${WEB_PID:-}" ] && kill "$WEB_PID" 2>/dev/null || true
   [ -n "${MOCK_PID:-}" ] && kill "$MOCK_PID" 2>/dev/null || true
   [ -n "${CAP_PID:-}" ] && kill "$CAP_PID" 2>/dev/null || true
@@ -49,14 +47,14 @@ else
 fi
 
 # 1) mock LLM server — one scripted tool call
-(cd "$REPO" && node --import tsx packages/test-support/llm-mock-server/src/bin.ts --host 127.0.0.1 --port "$MOCK_PORT" --api-key mock-key \
+(cd "$REPO" && exec node --import tsx packages/test-support/llm-mock-server/src/bin.ts --host 127.0.0.1 --port "$MOCK_PORT" --api-key mock-key \
   --sequence tool_call_success --tool-name "$TOOL_NAME" --tool-arguments "$TOOL_ARGS") >"$MOCK_LOG" 2>&1 &
 MOCK_PID=$!
 for i in $(seq 1 30); do rg -q '"type":"ready"' "$MOCK_LOG" 2>/dev/null && break; sleep 1; done
 
 # 2) dsh web pointed at the mock (no real API key involved)
 (cd "$REPO" && DEEPSEEK_BASE_URL="http://127.0.0.1:$MOCK_PORT/v1" DEEPSEEK_API_KEY=mock-key \
-  node --import tsx/esm apps/cli/src/bin.ts web --port "$WEB_PORT") >"$WEB_LOG" 2>&1 &
+  exec node --import tsx/esm apps/cli/src/bin.ts web --port "$WEB_PORT") >"$WEB_LOG" 2>&1 &
 WEB_PID=$!
 for i in $(seq 1 60); do curl -s -m 1 -o /dev/null -X POST "http://127.0.0.1:$WEB_PORT/api/host.describe" -H 'content-type: application/json' -d '{"type":"client-request","rpcId":"warm","method":"host.describe","payload":{}}' && break; sleep 1; done
 
